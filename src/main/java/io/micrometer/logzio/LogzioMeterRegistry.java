@@ -52,43 +52,9 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * {@link MeterRegistry} for Logz.io.
- *
  */
 public class LogzioMeterRegistry extends StepMeterRegistry {
     private static final ThreadFactory DEFAULT_THREAD_FACTORY = new NamedThreadFactory("Logzio-metrics-publisher");
-
-//    private static final String TEMPLATE_PROPERTIES = "\"properties\": {\n" +
-//            "  \"name\": {\n" +
-//            "    \"type\": \"keyword\"\n" +
-//            "  },\n" +
-//            "  \"count\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"value\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"sum\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"mean\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"duration\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"max\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"total\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"unknown\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  },\n" +
-//            "  \"active\": {\n" +
-//            "    \"type\": \"double\"\n" +
-//            "  }\n" +
-//            "}";
 
     private static final String ERROR_RESPONSE_BODY_SIGNATURE = "\"errors\":true";
     private static final Pattern STATUS_CREATED_PATTERN = Pattern.compile("\"status\":201");
@@ -107,10 +73,10 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
     /**
      * Create a new instance with given parameters.
      *
-     * @param config configuration to use
-     * @param clock clock to use
+     * @param config        configuration to use
+     * @param clock         clock to use
      * @param threadFactory thread factory to use
-     * @param httpClient http client to use
+     * @param httpClient    http client to use
      * @since 1.2.1
      */
     protected LogzioMeterRegistry(LogzioConfig config, Clock clock, ThreadFactory threadFactory, HttpSender httpClient) {
@@ -121,13 +87,9 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
         start(threadFactory);
     }
 
-//    public static Builder builder(LogzioConfig config) {
-//        return new Builder(config);
-//    }
-
     @Override
     protected void publish() {
-        String uri = config.host()+ "/?token=" + config.token() + "&type=micrometer_metrics";
+        String uri = config.host() + "/?token=" + config.token() + "&type=micrometer_metrics";
         for (List<Meter> batch : MeterPartition.partition(this, config.batchSize())) {
             try {
                 String requestBody = batch.stream()
@@ -223,9 +185,7 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
         double mean = timer.mean(getBaseTimeUnit());
         if (Double.isFinite(sum) && Double.isFinite(mean)) {
             return Optional.of(writeDocument(timer, builder -> {
-                builder.append(",\"count\":").append(timer.count());
-                builder.append(",\"sum\":").append(sum);
-                builder.append(",\"mean\":").append(mean);
+                builder.append(":").append(timer.count());
             }));
         }
         return Optional.empty();
@@ -234,18 +194,14 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
     // VisibleForTesting
     Optional<String> writeLongTaskTimer(LongTaskTimer timer) {
         return Optional.of(writeDocument(timer, builder -> {
-            builder.append(",\"activeTasks\":").append(timer.activeTasks());
-            builder.append(",\"duration\":").append(timer.duration(getBaseTimeUnit()));
+            builder.append(":").append(timer.activeTasks());
         }));
     }
 
     // VisibleForTesting
     Optional<String> writeTimer(Timer timer) {
         return Optional.of(writeDocument(timer, builder -> {
-            builder.append(",\"count\":").append(timer.count());
-            builder.append(",\"sum\":").append(timer.totalTime(getBaseTimeUnit()));
-            builder.append(",\"mean\":").append(timer.mean(getBaseTimeUnit()));
-            builder.append(",\"max\":").append(timer.max(getBaseTimeUnit()));
+            builder.append(":").append(timer.count());
         }));
     }
 
@@ -253,10 +209,7 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
     Optional<String> writeSummary(DistributionSummary summary) {
         HistogramSnapshot histogramSnapshot = summary.takeSnapshot();
         return Optional.of(writeDocument(summary, builder -> {
-            builder.append(",\"count\":").append(histogramSnapshot.count());
-            builder.append(",\"sum\":").append(histogramSnapshot.total());
-            builder.append(",\"mean\":").append(histogramSnapshot.mean());
-            builder.append(",\"max\":").append(histogramSnapshot.max());
+            builder.append(":").append(histogramSnapshot.count());
         }));
     }
 
@@ -285,7 +238,7 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
     }
 
     // VisibleForTesting
-    String  writeDocument(Meter meter, Consumer<StringBuilder> consumer) {
+    String writeDocument(Meter meter, Consumer<StringBuilder> consumer) {
 
         StringBuilder sb = new StringBuilder();
         String name = getConventionName(meter.getId());
@@ -295,12 +248,11 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
         sb.append("}").append(", \"dimensions\": {");
 
         List<Tag> tags = getConventionTags(meter.getId());
-        sb.append(tags.stream().map(tag -> "\"" + escapeJson(tag.getKey()) + "\"" + ":\"" + escapeJson(tag.getValue()) + "\"" ).collect(joining(", ")));
+        sb.append(tags.stream().map(tag -> "\"" + escapeJson(tag.getKey()) + "\"" + ":\"" + escapeJson(tag.getValue()) + "\"").collect(joining(", ")));
         sb.append("}}");
 
         return sb.toString();
     }
-
 
 
     @Override
@@ -308,37 +260,4 @@ public class LogzioMeterRegistry extends StepMeterRegistry {
     protected TimeUnit getBaseTimeUnit() {
         return TimeUnit.MILLISECONDS;
     }
-
-//    public static class Builder {
-//        private final LogzioConfig config;
-//
-//        private Clock clock = Clock.SYSTEM;
-//        private ThreadFactory threadFactory = DEFAULT_THREAD_FACTORY;
-//        private HttpSender httpClient;
-//
-//        @SuppressWarnings("deprecation")
-//        Builder(LogzioConfig config) {
-//            this.config = config;
-//            this.httpClient = new HttpUrlConnectionSender(config.connectTimeout(), config.readTimeout());
-//        }
-//
-//        public Builder clock(Clock clock) {
-//            this.clock = clock;
-//            return this;
-//        }
-//
-//        public Builder threadFactory(ThreadFactory threadFactory) {
-//            this.threadFactory = threadFactory;
-//            return this;
-//        }
-//
-//        public Builder httpClient(HttpSender httpClient) {
-//            this.httpClient = httpClient;
-//            return this;
-//        }
-//
-//        public LogzioMeterRegistry build() {
-//            return new LogzioMeterRegistry(config, clock, threadFactory, httpClient);
-//        }
-//    }
 }
