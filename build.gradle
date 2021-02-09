@@ -1,24 +1,39 @@
-plugins {
-    id 'java'
-}
-
-group 'org.example'
+group 'com.logzio.micrometer'
 version '1.0-SNAPSHOT'
+
 
 repositories {
     mavenCentral()
 }
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.13'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'com.google.protobuf'
+
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'io.micrometer:micrometer-core:latest.integration'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+
+    implementation "io.micrometer:micrometer-core:1.6.3"
+    testImplementation "io.micrometer:micrometer-test:1.6.3"
+    implementation "com.google.protobuf:protobuf-java:3.13.0"
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+    implementation group: 'org.javatuples', name: 'javatuples', version: '1.2'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
     implementation 'org.slf4j:slf4j-api'
+    implementation 'org.xerial.snappy:snappy-java:1.1.8.2'
+    implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.5.0'
 
-    //compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.9.0'
-    //compile 'io.micrometer:micrometer-registry-elastic:latest.release'
-
-    //api project(':micrometer-core')
-    //implementation 'org.slf4j:slf4j-api'
-    //testImplementation project(':micrometer-test')
+    testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.26'
+    testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
+    testImplementation "com.github.tomakehurst:wiremock-jre8:2.27.2"
 }

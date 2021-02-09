@@ -18,6 +18,8 @@ package io.micrometer.logzio;
 import io.micrometer.core.instrument.config.validate.Validated;
 import io.micrometer.core.instrument.step.StepRegistryConfig;
 
+import java.util.HashMap;
+
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkAll;
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkRequired;
 import static io.micrometer.core.instrument.config.validate.PropertyValidator.getString;
@@ -31,6 +33,17 @@ import static io.micrometer.core.instrument.config.validate.PropertyValidator.ge
  */
 public interface LogzioConfig extends StepRegistryConfig {
 
+    default HashMap<String, String> regionsUri() {
+        return new HashMap<String, String>() {{
+            put("us", "https://listener.logz.io");
+            put("ca", "https://listener-ca.logz.io");
+            put("eu", "https://listener-eu.logz.io");
+            put("nl", "https://listener-nl.logz.io");
+            put("uk", "https://listener-uk.logz.io");
+            put("wa", "https://listener-wa.logz.io");
+        }};
+    }
+
     /**
      * Property prefix to prepend to configuration names.
      *
@@ -40,17 +53,27 @@ public interface LogzioConfig extends StepRegistryConfig {
         return "logzio";
     }
 
-    /**
-     * The host to send metrics to.
-     *
-     * @return host
-     */
-    default String host() {
-        return getUrlString(this, "host").orElse("http://listener.logz.io:8070");
+    default String uri() {
+        String region = region();
+        if (region != null) {
+            HashMap<String, String> regionsToUri = regionsUri();
+            if (regionsToUri.containsKey(region)) {
+                return regionsToUri.get(region) + ":" + port();
+            }
+        }
+        return getUrlString(this, "uri").orElse("https://listener.logz.io" + ":" + port());
+    }
+
+    default String region() {
+        return getString(this, "region").orElse("null");
     }
 
     default String token() {
         return getString(this, "token").required().get();
+    }
+
+    default String port() {
+        return getString(this, "port").orElse("8051");
     }
 
     @Override
@@ -58,7 +81,7 @@ public interface LogzioConfig extends StepRegistryConfig {
         return checkAll(this,
                 c -> StepRegistryConfig.validate(c),
                 checkRequired("token", LogzioConfig::token),
-                checkRequired("host", LogzioConfig::host)
+                checkRequired("uri", LogzioConfig::uri)
         );
     }
 }
