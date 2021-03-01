@@ -1,4 +1,4 @@
-group 'com.logzio.micrometer'
+group 'io.logz.micrometer'
 version '1.0-SNAPSHOT'
 
 
@@ -19,6 +19,17 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'maven-publish'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
 
 dependencies {
 
@@ -36,4 +47,49 @@ dependencies {
     testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.27.2"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'micrometer-registry-logzio'
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = 'Micrometer Registry Logzio'
+                description = 'Micrometer Registry which send to Logz.io'
+                url = 'https://github.com/sett4/micrometer-registry-opentsdb'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'fadi-khatib'
+                        name = 'fadi-khatib'
+                        email = 'fadi-kh-1992@hotmail.com'
+                        organization = 'Logz.io'
+                        organizationUrl= 'http://logz.io'
+                    }
+                }
+                scm {
+                    connection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
+                    developerConnection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
+                    url = 'https://github.com/sett4/micrometer-registry-opentsdb'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url = "file:${System.getProperty('user.home')}/.m2/repository"
+
+        }
+    }
+
 }
