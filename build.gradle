@@ -60,7 +60,7 @@ publishing {
             pom {
                 name = 'Micrometer Registry Logzio'
                 description = 'Micrometer Registry which send to Logz.io'
-                url = 'https://github.com/sett4/micrometer-registry-opentsdb'
+                url = 'https://github.com/logzio/micrometer-registry-logzio'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -77,9 +77,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
-                    developerConnection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
-                    url = 'https://github.com/sett4/micrometer-registry-opentsdb'
+                    connection = 'https://github.com/logzio/micrometer-registry-logzio.git'
+                    developerConnection = 'https://github.com/logzio/micrometer-registry-logzio.git'
+                    url = 'https://github.com/logzio/micrometer-registry-logzio'
                 }
             }
         }
