@@ -73,7 +73,7 @@ public interface LogzioConfig extends StepRegistryConfig {
     }
 
     default String port() {
-        return getString(this, "port").orElse("8051");
+        return getString(this, "port").orElse("8053");
     }
 
     @Override

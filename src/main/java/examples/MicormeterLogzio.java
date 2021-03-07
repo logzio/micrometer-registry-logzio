@@ -1,35 +1,24 @@
 package examples;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.lang.Nullable;
 import io.micrometer.logzio.LogzioConfig;
 import io.micrometer.logzio.LogzioMeterRegistry;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-class ValueProvidor {
-    public int get_value(){
-        return 10;
-    }
-}
+
 class MicrometerLogzio {
 
     public static void main(String[] args) {
+
         LogzioConfig logzioConfig = new LogzioConfig() {
             @Override
-            @Nullable
-            public String get(String k) {
+            public String get(String key) {
                 return null;
             }
             @Override
-            public String region() {
-                return "us";
-            }
-            @Override
-            public String uri() {
-                return "https://listener.logz.io:8053";
-            }
+            public String uri() { return "https://listener.logz.io:8053"; }
             @Override
             public String token() {
                 return "IsIUMNTOTlSxltfCCyeaShJarQqHIKlE";
@@ -65,9 +54,10 @@ class MicrometerLogzio {
         summary.record(10);
         summary.record(20);
         summary.record(30);
+        // Output to Logz.io: summary_example_count, summary_example_max, summary_example_sum
 
         // Create Gauge
-        List<String> cache = new ArrayList<>();
+        List<String> cache = new ArrayList<>(4);
         // Track list size
         Gauge gauge = Gauge
                 .builder("cache_size_gauge_example", cache, List::size)
@@ -75,7 +65,7 @@ class MicrometerLogzio {
                 .register(registry);
         cache.add("1");
         // Track map size
-        Map<String, Integer> map_gauge = registry.gaugeMapSize("mapGauge", tags, new HashMap<>());
+        Map<String, Integer> map_gauge = registry.gaugeMapSize("map_gauge_example", tags, new HashMap<>());
         map_gauge.put("key",1);
         // set value manually
         AtomicInteger manual_gauge = registry.gauge("manual_gauge_example", new AtomicInteger(0));
@@ -98,5 +88,12 @@ class MicrometerLogzio {
                 e.printStackTrace();
             }
         });
+
+
+        try {
+            Thread.sleep(100000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
