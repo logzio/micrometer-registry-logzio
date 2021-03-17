@@ -33,7 +33,7 @@ Replace the placeholders in the code (indicated by the double angle brackets `<<
 |---|---|---|
 |listener-url|  The Logz.io Listener URL for for your region, configured to use port **8052** for http traffic, or port **8053** for https traffic. For more details, see the [regions page](https://docs.logz.io/user-guide/accounts/account-region.html) in logz.io docs| Required|
 |metrics-token | The Logz.io Prometheus Metrics account token. Find it under **Settings > Manage accounts**. [Look up your Metrics account token.](https://docs.logz.io/user-guide/accounts/finding-your-metrics-account-token/)  | Required|
-|interval | The interval in seconds, to push metrics to Logz.io)  | Required|
+|interval | The interval in seconds, to push metrics to Logz.io  | Required|
 
 #### In your package:
 ```java
