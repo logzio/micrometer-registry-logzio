@@ -1,7 +1,7 @@
 ## Send Custom metrics from your JAVA application to Logz.io using Micrometer
 A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional metrics to Logz.io.
 
-This registry should be able to be used any application that uses micrometer for recording metrics.
+This registry can be used by any application that uses micrometer for recording metrics.
 
 ## Usage:
 #### via maven:
