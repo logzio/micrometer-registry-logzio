@@ -4,7 +4,7 @@ A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional 
 This registry should be able to be used any application that uses micrometer for recording metrics.
 
 ## Usage:
-via maven:
+#### via maven:
 
 ```
 <dependency>
@@ -14,7 +14,18 @@ via maven:
 </dependency>
 ```
 
-3) Quick start:
+#### Via gradle:
+```j
+implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0'
+```
+
+#### Import in your package:
+```java
+import io.micrometer.logzio.LogzioConfig;
+import io.micrometer.logzio.LogzioMeterRegistry;
+```
+
+## Quick start:
    
 Replace the placeholders in the code (indicated by the double angle brackets `<< >>`) to match your specifics.
 
@@ -24,7 +35,7 @@ Replace the placeholders in the code (indicated by the double angle brackets `<<
 |metrics-token | The Logz.io Prometheus Metrics account token. Find it under **Settings > Manage accounts**. [Look up your Metrics account token.](https://docs.logz.io/user-guide/accounts/finding-your-metrics-account-token/)  | Required|
 |interval | The interval in seconds, to push metrics to Logz.io)  | Required|
 
-In your package:
+#### In your package:
 ```java
 package your_package;
 import io.micrometer.core.instrument.*;
