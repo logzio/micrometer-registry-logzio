@@ -4,19 +4,14 @@ A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional 
 This registry should be able to be used any application that uses micrometer for recording metrics.
 
 ## Usage:
-
-1) via gradle: 
-   
-`implementation 'io.logz:micrometer-registry-logzio:1.0-SNAPSHOT'`
-
-2) via maven:
+via maven:
 
 ```
-    <dependency>
-        <groupId>io.logz</groupId>
-        <artifactId>micrometer-registry-logzio</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </dependency>
+<dependency>
+    <groupId>io.logz.micrometer</groupId>
+    <artifactId>micrometer-registry-logzio</artifactId>
+    <version>1.0</version>
+</dependency>
 ```
 
 3) Quick start:
