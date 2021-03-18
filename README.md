@@ -4,9 +4,9 @@ A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional 
 This registry can be used by any application that uses micrometer for recording metrics.
 
 ## Usage:
-#### via maven:
+#### Via maven:
 
-```
+```xml
 <dependency>
     <groupId>io.logz.micrometer</groupId>
     <artifactId>micrometer-registry-logzio</artifactId>
@@ -14,9 +14,14 @@ This registry can be used by any application that uses micrometer for recording 
 </dependency>
 ```
 
-#### Via gradle:
-```j
+#### Via gradle groovy:
+```groovy
 implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0'
+```
+
+#### Via gradle Kotlin:
+```kotlin
+implementation("io.logz.micrometer:micrometer-registry-logzio:1.0")
 ```
 
 #### Import in your package:
