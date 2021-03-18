@@ -38,7 +38,7 @@ Replace the placeholders in the code (indicated by the double angle brackets `<<
 |---|---|---|
 |listener-url|  The Logz.io Listener URL for for your region, configured to use port **8052** for http traffic, or port **8053** for https traffic. For more details, see the [regions page](https://docs.logz.io/user-guide/accounts/account-region.html) in logz.io docs| Required|
 |metrics-token | The Logz.io Prometheus Metrics account token. Find it under **Settings > Manage accounts**. [Look up your Metrics account token.](https://docs.logz.io/user-guide/accounts/finding-your-metrics-account-token/)  | Required|
-|interval | The interval in seconds, to push metrics to Logz.io)  | Required|
+|interval | The interval in seconds, to push metrics to Logz.io  | Required|
 
 #### In your package:
 ```java
@@ -87,7 +87,6 @@ class MicrometerLogzio {
       // Increment your counter
       counter.increment(); 
       counter.increment(2); 
-      // Output: counter_example_total{"env"="dev"} 3
    }
 }
 ```
@@ -113,7 +112,7 @@ Counter counter = Counter
 // Increment your counter
 counter.increment(); 
 counter.increment(2); 
-// Output to Logz.io: counter_example_total{env="dev"} 3
+// The following metric will be created and sent to Logz.io: counter_example_total{env="dev"} 3
 ```
 
 ### [Gauge](https://micrometer.io/docs/concepts#_gauges)
@@ -126,17 +125,17 @@ Gauge gauge = Gauge
         .tags(tags)
         .register(registry);
 cache.add("1");
-// Output to Logz.io: cache_size_gauge_example{env="dev"} 1
+// The following metric will be created and sent to Logz.io: cache_size_gauge_example{env="dev"} 1
         
 // Track map size
 Map<String, Integer> map_gauge = registry.gaugeMapSize("map_gauge_example", tags, new HashMap<>());
 map_gauge.put("key",1);
-// Output to Logz.io: map_gauge_example{env="dev"} 1
+// The following metric will be created and sent to Logz.io: map_gauge_example{env="dev"} 1
         
 // set value manually
 AtomicInteger manual_gauge = registry.gauge("manual_gauge_example", new AtomicInteger(0));
 manual_gauge.set(83);
-// Output to Logz.io: manual_gauge_example{env="dev"} 83
+// The following metric will be created and sent to Logz.io:: manual_gauge_example{env="dev"} 83
 
 ```
 
@@ -152,7 +151,7 @@ DistributionSummary summary = DistributionSummary
 summary.record(10);
 summary.record(20);
 summary.record(30);
-// Output to Logz.io: 
+// // The following metrics will be created and sent to Logz.io: 
 // summary_example_count{env="dev"} 3
 // summary_example_max{env="dev"} 30
 // summary_example_sum{env="dev"} 60
@@ -176,7 +175,7 @@ timer.record(()-> {
         e.printStackTrace();
     }
 });
-// Output to Logz.io: 
+// The following metrics will be created and sent to Logz.io: 
 // timer_example_duration_seconds_count{env="dev"} 2
 // timer_example_duration_seconds_max{env="dev"} 1501
 // timer_example_duration_seconds_sum{env="dev"} 3000
