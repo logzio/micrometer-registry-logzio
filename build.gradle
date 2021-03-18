@@ -1,5 +1,5 @@
 group 'io.logz.micrometer'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 
 repositories {
@@ -19,20 +19,31 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'signing'
 apply plugin: 'maven-publish'
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier = 'sources'
-}
+apply plugin: 'maven'
 
 task javadocJar(type: Jar) {
-    from javadoc
     classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
 }
 
 dependencies {
 
+    compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
     implementation "io.micrometer:micrometer-core:1.6.3"
     testImplementation "io.micrometer:micrometer-test:1.6.3"
     implementation "com.google.protobuf:protobuf-java:3.13.0"
@@ -49,47 +60,49 @@ dependencies {
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.27.2"
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = 'micrometer-registry-logzio'
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-            pom {
-                name = 'Micrometer Registry Logzio'
-                description = 'Micrometer Registry which send to Logz.io'
-                url = 'https://github.com/sett4/micrometer-registry-opentsdb'
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment {MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: '', password: '')
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: '', password: '')
+            }
+
+            pom.project {
+                name 'Micrometer Registry Logzio'
+                artifactId 'micrometer-registry-logzio'
+                // optionally artifactId can be defined here
+                description 'Micrometer Registry which send to Logz.io.'
+                url 'https://github.com/logzio/micrometer-registry-logzio'
+
+                scm {
+                    connection 'scm:https://github.com/logzio/micrometer-registry-logzio.git'
+                    developerConnection 'scm:https://github.com/logzio/micrometer-registry-logzio.git'
+                    url 'https://github.com/logzio/micrometer-registry-logzio'
+                }
+
                 licenses {
                     license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
+
                 developers {
                     developer {
-                        id = 'fadi-khatib'
-                        name = 'fadi-khatib'
-                        email = 'fadi-kh-1992@hotmail.com'
-                        organization = 'Logz.io'
-                        organizationUrl= 'http://logz.io'
+                        id 'fadi-khatib'
+                        name 'fadi-khatib'
+                        email 'fadi-kh-1992@hotmail.com'
+                        organization 'Logz.io'
+                        organizationUrl 'http://logz.io'
                     }
-                }
-                scm {
-                    connection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
-                    developerConnection = 'scm:https://github.com/sett4/micrometer-registry-opentsdb.git'
-                    url = 'https://github.com/sett4/micrometer-registry-opentsdb'
                 }
             }
         }
     }
-
-    repositories {
-        maven {
-            // change to point to your repo, e.g. http://my.org/repo
-            url = "file:${System.getProperty('user.home')}/.m2/repository"
-
-        }
-    }
-
 }
