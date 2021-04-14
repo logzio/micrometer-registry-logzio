@@ -18,10 +18,10 @@ class MicrometerLogzio {
                 return null;
             }
             @Override
-            public String uri() { return "https://listener.logz.io:8053"; }
+            public String uri() { return ""; }
             @Override
             public String token() {
-                return "IsIUMNTOTlSxltfCCyeaShJarQqHIKlE";
+                return "";
             }
             @Override
             public Duration step() {
