@@ -10,18 +10,18 @@ This registry can be used by any application that uses micrometer for recording 
 <dependency>
     <groupId>io.logz.micrometer</groupId>
     <artifactId>micrometer-registry-logzio</artifactId>
-    <version>1.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
 #### Via gradle groovy:
 ```groovy
-implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0'
+implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0.1'
 ```
 
 #### Via gradle Kotlin:
 ```kotlin
-implementation("io.logz.micrometer:micrometer-registry-logzio:1.0")
+implementation("io.logz.micrometer:micrometer-registry-logzio:1.0.1")
 ```
 
 #### Import in your package:
