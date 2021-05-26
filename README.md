@@ -73,10 +73,10 @@ class MicrometerLogzio {
          }
       };
       // Initialize registry
-      LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
-      // Define tags (labels)
-      ArrayList<Tag> tags = new ArrayList<>();
-      tags.add(Tag.of("env","dev"));
+       LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
+       // Define tags (labels)
+       ArrayList<Tag> tags = new ArrayList<>();
+       tags.add(Tag.of("env","dev-micrometer"));
 
       // Create counter
       Counter counter = Counter
@@ -90,6 +90,44 @@ class MicrometerLogzio {
    }
 }
 ```
+
+## Common tags
+You can attach common tags to your registry that will be added to all metrics reported, for example:
+```java
+// Initialize registry
+LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
+// Define tags (labels)
+registry.config().commonTags("key", "value");
+```
+
+## Meter binders
+Micrometer provides a set of binders for monitoring JVM metrics out of the box, for example:
+```java
+// Initialize registry
+LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
+
+// Gauges buffer and memory pool utilization
+new JvmMemoryMetrics().bindTo(registry);
+// Gauges max and live data size, promotion and allocation rates, and times GC pauses
+new JvmGcMetrics().bindTo(registry);
+// Gauges current CPU total and load average.
+new ProcessorMetrics().bindTo(registry);
+// Gauges thread peak, number of daemon threads, and live threads
+new JvmThreadMetrics().bindTo(registry);
+// Gauges loaded and unloaded classes
+new ClassLoaderMetrics().bindTo(registry);
+
+// File descriptor metrics gathered by the JVM
+new FileDescriptorMetrics(tags).bindTo(registry);
+// Gauges The uptime and start time of the Java virtual machine
+new UptimeMetrics(tags).bindTo(registry);
+
+// Counter of logging events
+new LogbackMetrics().bindTo(registry);
+new Log4j2Metrics().bindTo(registry);
+```
+For more information about other binders check out [Micrometer-core](https://github.com/micrometer-metrics/micrometer/tree/main/micrometer-core/src/main/java/io/micrometer/core/instrument/binder) Github repo.
+
 ## Types of metrics 
 
 Refer to the Micrometer [documentation](https://micrometer.io/docs/concepts) for more details.
