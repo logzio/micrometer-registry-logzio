@@ -21,11 +21,11 @@ class MicrometerLogzio {
             public String uri() { return ""; }
             @Override
             public String token() {
-                return "";
+                return "fake";
             }
             @Override
             public Duration step() {
-                return Duration.ofSeconds(30);
+                return Duration.ofSeconds(5);
             }
         };
         // Initialize registry

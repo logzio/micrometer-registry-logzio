@@ -24,8 +24,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 compileJava   {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
+    sourceCompatibility = '8'
+    targetCompatibility = '8'
 }
 
 task javadocJar(type: Jar) {
@@ -46,7 +46,9 @@ signing {
     sign configurations.archives
 }
 
+
 dependencies {
+    compile "io.github.resilience4j:resilience4j-retry:1.7.0"
 
     compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
     implementation "io.micrometer:micrometer-core:1.6.3"

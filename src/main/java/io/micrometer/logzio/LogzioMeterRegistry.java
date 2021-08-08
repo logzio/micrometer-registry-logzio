@@ -71,7 +71,7 @@ public class LogzioMeterRegistry extends PushMeterRegistry {
     @SuppressWarnings("deprecation")
     public LogzioMeterRegistry(LogzioConfig config, Clock clock) {
         this(config, clock, DEFAULT_THREAD_FACTORY,
-                new HttpUrlConnectionSender(config.connectTimeout(), config.readTimeout()));
+                new RetryHttpClient(config.connectTimeout(), config.readTimeout()));
     }
 
     /**
@@ -112,7 +112,6 @@ public class LogzioMeterRegistry extends PushMeterRegistry {
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .collect(Collectors.toList());
-
                 Remote.WriteRequest writeRequest = buildRemoteWriteRequest(requestBody);
                 httpClient
                         .post(uri)
