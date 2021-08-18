@@ -16,14 +16,7 @@
 package io.micrometer.logzio;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.FunctionCounter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.LongTaskTimer;
-import io.micrometer.core.instrument.MockClock;
-import io.micrometer.core.instrument.TimeGauge;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Hashtable;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -86,6 +80,62 @@ class LogzioMeterRegistryTest {
         registry.close();
         server.stop();
     }
+    @Test
+    void testFilterInclude() {
+        LogzioConfig logzioConfig = new LogzioConfig() {
+            @Override
+            public String get(String key) {
+                return null;
+            }
+            @Override
+            public boolean enabled() {
+                return false;
+            }
+            @Override
+            public String uri() { return server.baseUrl(); }
+            @Override
+            public String token() {
+                return "fake";
+            }
+            @Override
+            public Hashtable<String, String> includeLabels() {
+                Hashtable<String, String> include = new Hashtable<>();
+                include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+                include.put("k1", "v1");
+                return include;
+            }
+            @Override
+            public Hashtable<String, String> excludeLabels() {
+                Hashtable<String, String> exclude = new Hashtable<>();
+                return exclude;
+            }
+        };
+        // Initialize registry
+        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
+        server.stubFor(any(anyUrl()));
+        Counter.builder("my.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.second.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.third.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(2));
+        server.verify(1, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_counter_abc_total.*"))
+        );
+        registry.clear();
+
+    }
+
 
     @Test
     void testPublishMetrics() {

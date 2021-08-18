@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.config.validate.Validated;
 import io.micrometer.core.instrument.step.StepRegistryConfig;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkAll;
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkRequired;
@@ -51,6 +52,14 @@ public interface LogzioConfig extends StepRegistryConfig {
 
     default String region() {
         return getString(this, "region").orElse("null");
+    }
+
+    default Hashtable<String, String> includeLabels() {
+        return new Hashtable<>();
+    }
+
+    default Hashtable<String, String> excludeLabels() {
+        return new Hashtable<>();
     }
 
     default String token() {
