@@ -58,7 +58,7 @@ dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
     implementation 'org.slf4j:slf4j-api'
     implementation 'org.xerial.snappy:snappy-java:1.1.8.2'
-    implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.5.0'
+    implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.6.0'
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.26'
     testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
