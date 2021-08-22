@@ -21,8 +21,8 @@ class MicrometerLogzio {
             @Override
             public String uri() { return ""; }
             @Override
-            public String token() {
-                return "fake";
+            public String token() {              
+                return ""; 
             }
             @Override
             public Duration step() {
