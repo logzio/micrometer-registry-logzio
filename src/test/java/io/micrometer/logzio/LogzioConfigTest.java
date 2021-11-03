@@ -42,12 +42,12 @@ class LogzioConfigTest {
     @Test
     void uriBasedRegion() {
         props.put("logzio.region", "eu");
-        assertThat(config.uri()).isEqualTo("https://listener-eu.logz.io:8051");
+        assertThat(config.uri()).isEqualTo("https://listener-eu.logz.io:8053");
     }
 
     @Test
     void defaultUriWhenMissing() {
-        assertThat(config.uri()).isEqualTo("https://listener.logz.io:8051");
+        assertThat(config.uri()).isEqualTo("https://listener.logz.io:8053");
     }
 
 }
