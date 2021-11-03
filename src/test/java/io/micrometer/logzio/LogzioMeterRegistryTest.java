@@ -80,61 +80,61 @@ class LogzioMeterRegistryTest {
         registry.close();
         server.stop();
     }
-//    @Test
-//    void testFilterInclude() {
-//        LogzioConfig logzioConfig = new LogzioConfig() {
-//            @Override
-//            public String get(String key) {
-//                return null;
-//            }
-//            @Override
-//            public boolean enabled() {
-//                return false;
-//            }
-//            @Override
-//            public String uri() { return server.baseUrl(); }
-//            @Override
-//            public String token() {
-//                return "fake";
-//            }
-//            @Override
-//            public Hashtable<String, String> includeLabels() {
-//                Hashtable<String, String> include = new Hashtable<>();
-//                include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
-//                include.put("k1", "v1");
-//                return include;
-//            }
-//            @Override
-//            public Hashtable<String, String> excludeLabels() {
-//                Hashtable<String, String> exclude = new Hashtable<>();
-//                return exclude;
-//            }
-//        };
-//        // Initialize registry
-//        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
-//        server.stubFor(any(anyUrl()));
-//        Counter.builder("my.counter#abc")
-//                .tag("k1","v1")
-//                .register(registry)
-//                .increment(Math.PI);
-//        Counter.builder("my.second.counter#abc")
-//                .tag("k1","v1")
-//                .register(registry)
-//                .increment(Math.PI);
-//        Counter.builder("my.third.counter#abc")
-//                .tag("k1","v1")
-//                .register(registry)
-//                .increment(Math.PI);
-//        registry.publish();
-//
-//        await().timeout(Duration.ofSeconds(2));
-//        server.verify(1, postRequestedFor(
-//                urlEqualTo("/"))
-//                .withRequestBody(matching(".*my_counter_abc_total.*"))
-//        );
-//        registry.clear();
-//
-//    }
+    @Test
+    void testFilterInclude() {
+        LogzioConfig logzioConfig = new LogzioConfig() {
+            @Override
+            public String get(String key) {
+                return null;
+            }
+            @Override
+            public boolean enabled() {
+                return false;
+            }
+            @Override
+            public String uri() { return server.baseUrl(); }
+            @Override
+            public String token() {
+                return "fake";
+            }
+            @Override
+            public Hashtable<String, String> includeLabels() {
+                Hashtable<String, String> include = new Hashtable<>();
+                include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+                include.put("k1", "v1");
+                return include;
+            }
+            @Override
+            public Hashtable<String, String> excludeLabels() {
+                Hashtable<String, String> exclude = new Hashtable<>();
+                return exclude;
+            }
+        };
+        // Initialize registry
+        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
+        server.stubFor(any(anyUrl()));
+        Counter.builder("my.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.second.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.third.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(2));
+        server.verify(1, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_counter_abc_total.*|*.my_second_counter_abc_total.*"))
+        );
+        registry.clear();
+        registry.close();
+    }
 
 
     @Test
@@ -178,7 +178,7 @@ class LogzioMeterRegistryTest {
     }
 
 
-    @Test
+    @org.junit.Test
     void writeTimeGauge() {
         TimeGauge gauge = TimeGauge.builder("myTimeGauge", 123.0, TimeUnit.MILLISECONDS, Number::doubleValue).register(registry);
         assertThat(registry.writeTimeGauge(gauge).toString())

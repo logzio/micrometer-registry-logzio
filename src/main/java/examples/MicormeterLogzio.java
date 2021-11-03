@@ -22,7 +22,7 @@ class MicrometerLogzio {
             public String uri() { return ""; }
             @Override
             public String token() {              
-                return ""; 
+                return "";
             }
             @Override
             public Duration step() {
