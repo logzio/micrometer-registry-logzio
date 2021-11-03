@@ -2,6 +2,7 @@
 A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional metrics to Logz.io.
 
 This registry can be used by any application that uses micrometer for recording metrics.
+**You will need Java 11 or higher**
 
 ## Usage:
 #### Via maven:
@@ -38,7 +39,7 @@ Replace the placeholders in the code (indicated by the double angle brackets `<<
 |---|---|---|
 |listener-url|  The full Logz.io Listener URL for for your region, configured to use port **8052** for http traffic, or port **8053** for https traffic (example: https://listener.logz.io:5053). For more details, see the [regions page](https://docs.logz.io/user-guide/accounts/account-region.html) in logz.io docs | Required|
 |metrics-token | The Logz.io Prometheus Metrics account token. Find it under **Settings > Manage accounts**. [Look up your Metrics account token.](https://docs.logz.io/user-guide/accounts/finding-your-metrics-account-token/)  | Required|
-|interval | The interval in seconds, to push metrics to Logz.io  | Required|
+|interval | The interval in seconds, to push metrics to Logz.io **Note that your program will need to run for at least one interval for the metrics to be sent**  | Required|
 
 #### In your package:
 ```java
@@ -60,6 +61,8 @@ class MicrometerLogzio {
          @Override
          public String uri() {
             return "<<listener-url>>";
+            // example:
+            // return "https://listener.logz.io:5053"; 
          }
 
          @Override
@@ -70,6 +73,8 @@ class MicrometerLogzio {
          @Override
          public Duration step() {
             return Duration.ofSeconds(<<interval>>);
+            // example:
+            // return Duration.ofSeconds(30);                    
          }
       };
       // Initialize registry
