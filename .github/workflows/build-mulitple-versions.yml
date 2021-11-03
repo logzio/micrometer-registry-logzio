@@ -16,7 +16,5 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
-      - uses: gradle/gradle-build-action@v2
-        with:
+          gradle-version: 7
           arguments: test
