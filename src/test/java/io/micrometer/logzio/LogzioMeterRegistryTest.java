@@ -82,6 +82,24 @@ class LogzioMeterRegistryTest {
     }
 
     @Test
+    void testRetry() {
+        server.stubFor(any(anyUrl()).willReturn(
+                aResponse()
+                        .withStatus(500)
+                        .withLogNormalRandomDelay(90, 0.1)));
+        Counter.builder("my.counter#abc")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(2));
+        assertThat(registry.getMeters().size()).isEqualTo(1);
+        server.verify(3, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_counter_abc_total.*"))
+        );
+    }
+    @Test
     void testPublishMetrics() {
         server.stubFor(any(anyUrl()));
         Counter.builder("my.counter#abc")
