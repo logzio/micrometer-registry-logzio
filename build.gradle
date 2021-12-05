@@ -22,27 +22,10 @@ apply plugin: 'com.google.protobuf'
 apply plugin: 'signing'
 
 
-//apply plugin: 'maven-publish'
-//apply plugin: 'maven'
-
 compileJava   {
     sourceCompatibility = '8'
     targetCompatibility = '8'
 }
-
-//task javadocJar(type: Jar) {
-//    classifier = 'javadoc'
-//    from javadoc
-//}
-//
-//task sourcesJar(type: Jar) {
-//    classifier = 'sources'
-//    from sourceSets.main.allSource
-//}
-//
-//artifacts {
-//    archives javadocJar, sourcesJar
-//}
 
 signing {
     sign configurations.archives
@@ -66,51 +49,3 @@ dependencies {
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.27.2"
 }
-
-//uploadArchives {
-//    repositories {
-//        mavenDeployer {
-//            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-//
-//            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-//                authentication(userName: '', password: '')
-//            }
-//
-//            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-//                authentication(userName: '', password: '')
-//            }
-//
-//            pom.project {
-//                name 'Micrometer Registry Logzio'
-//                artifactId 'micrometer-registry-logzio'
-//                // optionally artifactId can be defined here
-//                description 'Micrometer Registry which send to Logz.io.'
-//                url 'https://github.com/logzio/micrometer-registry-logzio'
-//
-//                scm {
-//                    connection 'scm:https://github.com/logzio/micrometer-registry-logzio.git'
-//                    developerConnection 'scm:https://github.com/logzio/micrometer-registry-logzio.git'
-//                    url 'https://github.com/logzio/micrometer-registry-logzio'
-//                }
-//
-//                licenses {
-//                    license {
-//                        name 'The Apache License, Version 2.0'
-//                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-//                    }
-//                }
-//
-//                developers {
-//                    developer {
-//                        id 'fadi-khatib'
-//                        name 'fadi-khatib'
-//                        email 'fadi-kh-1992@hotmail.com'
-//                        organization 'Logz.io'
-//                        organizationUrl 'http://logz.io'
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
