@@ -22,27 +22,27 @@ apply plugin: 'com.google.protobuf'
 apply plugin: 'signing'
 
 
-apply plugin: 'maven-publish'
-apply plugin: 'maven'
+//apply plugin: 'maven-publish'
+//apply plugin: 'maven'
 
 compileJava   {
     sourceCompatibility = '8'
     targetCompatibility = '8'
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
+//task javadocJar(type: Jar) {
+//    classifier = 'javadoc'
+//    from javadoc
+//}
+//
+//task sourcesJar(type: Jar) {
+//    classifier = 'sources'
+//    from sourceSets.main.allSource
+//}
+//
+//artifacts {
+//    archives javadocJar, sourcesJar
+//}
 
 signing {
     sign configurations.archives
