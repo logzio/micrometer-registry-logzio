@@ -216,8 +216,7 @@ class LogzioMeterRegistryTest {
             }
             @Override
             public Hashtable<String, String> excludeLabels() {
-                Hashtable<String, String> exclude = new Hashtable<>();
-                return exclude;
+                return new Hashtable<>();
             }
         };
         // Initialize registry

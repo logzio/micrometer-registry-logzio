@@ -10,18 +10,18 @@ This registry can be used by any application that uses micrometer for recording 
 <dependency>
     <groupId>io.logz.micrometer</groupId>
     <artifactId>micrometer-registry-logzio</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
 #### Via gradle groovy:
 ```groovy
-implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0.1'
+implementation 'io.logz.micrometer:micrometer-registry-logzio:1.0.2'
 ```
 
 #### Via gradle Kotlin:
 ```kotlin
-implementation("io.logz.micrometer:micrometer-registry-logzio:1.0.1")
+implementation("io.logz.micrometer:micrometer-registry-logzio:1.0.2")
 ```
 
 #### Import in your package:
@@ -71,6 +71,13 @@ class MicrometerLogzio {
          public Duration step() {
             return Duration.ofSeconds(<<interval>>);
          }
+          @Override
+          public Hashtable<String, String> includeLabels() {
+              return new Hashtable<>();
+          }
+          @Override
+          public Hashtable<String, String> excludeLabels() {
+              return new Hashtable<>();
       };
       // Initialize registry
        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
@@ -99,6 +106,34 @@ LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTE
 // Define tags (labels)
 registry.config().commonTags("key", "value");
 ```
+
+## Filter labels
+you can the `includeLabels` or `excludeLabels` functions to filter your metrics by labels.
+#### Include:
+Take for example this following usage, In your `LogzioConfig()` constructor:
+```java
+@Override
+public Hashtable<String, String> includeLabels() {
+    Hashtable<String, String> include = new Hashtable<>();
+    include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+    include.put("k1", "v1");
+    return include;
+}
+```
+The registry will keep only metrics with the label `__name__` matching the regex `my_counter_abc_total|my_second_counter_abc_total`, and with the label `k1` matching the regex `v1`.
+#### Exclude:
+In your `LogzioConfig()` constructor:
+```java
+@Override
+public Hashtable<String, String> excludeLabels() {
+    Hashtable<String, String> exclude = new Hashtable<>();
+    exclude.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+    exclude.put("k1", "v1");
+    return exclude;
+}
+```
+The registry will drop all metrics with the label `__name__` matching the regex `my_counter_abc_total|my_second_counter_abc_total`, and with the label `k1` matching the regex `v1`.
+
 
 ## Meter binders
 Micrometer provides a set of binders for monitoring JVM metrics out of the box, for example:
@@ -219,5 +254,18 @@ timer.record(()-> {
 // timer_example_duration_seconds_sum{env="dev"} 3000
 
 ```
+
+## Change log
+
+- **1.0.2**:
+    - Compatible with Java 8 and above
+    - Enable Include and Exclude filter
+    - Implement retry mechanism
+    - GitHub actions (test with multiple java versions)
+- **1.0.1**:
+    - Compatible with Java 11 and above
+- **1.0.0**:
+    - Initial release.
+
 
 
