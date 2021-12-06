@@ -36,9 +36,9 @@ Replace the placeholders in the code (indicated by the double angle brackets `<<
 
 | Environment variable | Description |Required/Default|
 |---|---|---|
-|listener-url|  The Logz.io Listener URL for for your region, configured to use port **8052** for http traffic, or port **8053** for https traffic. For more details, see the [regions page](https://docs.logz.io/user-guide/accounts/account-region.html) in logz.io docs| Required|
+|listener-url|  The full Logz.io Listener URL for for your region, configured to use port **8052** for http traffic, or port **8053** for https traffic (example: https://listener.logz.io:5053). For more details, see the [regions page](https://docs.logz.io/user-guide/accounts/account-region.html) in logz.io docs | Required|
 |metrics-token | The Logz.io Prometheus Metrics account token. Find it under **Settings > Manage accounts**. [Look up your Metrics account token.](https://docs.logz.io/user-guide/accounts/finding-your-metrics-account-token/)  | Required|
-|interval | The interval in seconds, to push metrics to Logz.io  | Required|
+|interval | The interval in seconds, to push metrics to Logz.io **Note that your program will need to run for at least one interval for the metrics to be sent**  | Required|
 
 #### In your package:
 ```java
@@ -59,9 +59,11 @@ class MicrometerLogzio {
          }
          @Override
          public String uri() {
-            return "<<listener-url>>";
+           return "<<listener-url>>";
+           // example:
+           // return "https://listener.logz.io:8053"; 
          }
-
+         
          @Override
          public String token() {
             return "<<metrics-token>>";
@@ -69,15 +71,17 @@ class MicrometerLogzio {
 
          @Override
          public Duration step() {
-            return Duration.ofSeconds(<<interval>>);
+           return Duration.ofSeconds(<<interval>>);
+           // example:
+           // return Duration.ofSeconds(30);                    
          }
-          @Override
-          public Hashtable<String, String> includeLabels() {
-              return new Hashtable<>();
-          }
-          @Override
-          public Hashtable<String, String> excludeLabels() {
-              return new Hashtable<>();
+         @Override
+         public Hashtable<String, String> includeLabels() {
+             return new Hashtable<>();
+         }
+         @Override
+         public Hashtable<String, String> excludeLabels() {
+             return new Hashtable<>();
       };
       // Initialize registry
        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, Clock.SYSTEM);
@@ -261,7 +265,7 @@ timer.record(()-> {
     - Compatible with Java 8 and above
     - Enable Include and Exclude filter
     - Implement retry mechanism
-    - GitHub actions (test with multiple java versions)
+    - GitHub actions (test with multiple java versions and operating systems)
 - **1.0.1**:
     - Compatible with Java 11 and above
 - **1.0.0**:
