@@ -4,6 +4,9 @@ A [Micrometer metrics](https://micrometer.io/) registry for sending dimensional 
 This registry can be used by any application that uses micrometer for recording metrics.
 
 ## Usage:
+
+**Note:** you will need java 8 or above
+
 #### Via maven:
 
 ```xml
