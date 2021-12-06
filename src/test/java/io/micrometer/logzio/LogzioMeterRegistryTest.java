@@ -16,14 +16,7 @@
 package io.micrometer.logzio;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.FunctionCounter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.LongTaskTimer;
-import io.micrometer.core.instrument.MockClock;
-import io.micrometer.core.instrument.TimeGauge;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Hashtable;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -88,6 +82,24 @@ class LogzioMeterRegistryTest {
     }
 
     @Test
+    void testRetry() {
+        server.stubFor(any(anyUrl()).willReturn(
+                aResponse()
+                        .withStatus(500)
+                        .withLogNormalRandomDelay(90, 0.1)));
+        Counter.builder("my.counter#abc")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(2));
+        assertThat(registry.getMeters().size()).isEqualTo(1);
+        server.verify(3, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_counter_abc_total.*"))
+        );
+    }
+    @Test
     void testPublishMetrics() {
         server.stubFor(any(anyUrl()));
         Counter.builder("my.counter#abc")
@@ -106,9 +118,9 @@ class LogzioMeterRegistryTest {
     void writeTimer() {
         Timer timer = Timer.builder("myTimer").register(registry);
         assertThat(registry.writeTimer(timer).toString())
-                .contains("{__name__=myTimer_duration_seconds_count}, {1970-01-01T00:00:00.001Z=0}"
-                        , "{__name__=myTimer_duration_seconds_max}, {1970-01-01T00:00:00.001Z=0.0}"
-                        , "{__name__=myTimer_duration_seconds_sum}, {1970-01-01T00:00:00.001Z=0.0}"
+                .contains("{__name__=myTimer_duration_seconds_count}"
+                        , "{__name__=myTimer_duration_seconds_max}"
+                        , "{__name__=myTimer_duration_seconds_sum}"
                 );
     }
 
@@ -117,14 +129,14 @@ class LogzioMeterRegistryTest {
         Counter counter = Counter.builder("myCounter").register(registry);
         counter.increment();
         assertThat(registry.writeCounter(counter).toString())
-                .contains("{__name__=myCounter_total}, {1970-01-01T00:00:00.001Z=1.0}");
+                .contains("{__name__=myCounter_total},");
     }
 
     @Test
     void writeGauge() {
         Gauge gauge = Gauge.builder("myGauge", 123.0, Number::doubleValue).register(registry);
         assertThat(registry.writeGauge(gauge).toString())
-                .contains("{__name__=myGauge}, {1970-01-01T00:00:00.001Z=123.0}");
+                .contains("{__name__=myGauge}");
     }
 
 
@@ -132,16 +144,16 @@ class LogzioMeterRegistryTest {
     void writeTimeGauge() {
         TimeGauge gauge = TimeGauge.builder("myTimeGauge", 123.0, TimeUnit.MILLISECONDS, Number::doubleValue).register(registry);
         assertThat(registry.writeTimeGauge(gauge).toString())
-                .contains("{__name__=myTimeGauge_milliseconds}, {1970-01-01T00:00:00.001Z=123.0}");
+                .contains("{__name__=myTimeGauge_milliseconds}");
     }
 
     @Test
     void writeLongTaskTimer() {
         LongTaskTimer timer = LongTaskTimer.builder("longTaskTimer").register(registry);
         assertThat(registry.writeLongTaskTimer(timer).toString())
-                .contains("{__name__=longTaskTimer_duration_seconds_sum}, {1970-01-01T00:00:00.001Z=0.0}"
-                        , "{__name__=longTaskTimer_duration_seconds_max}, {1970-01-01T00:00:00.001Z=0.0}"
-                        , "{__name__=longTaskTimer_duration_seconds_count}, {1970-01-01T00:00:00.001Z=0}"
+                .contains("{__name__=longTaskTimer_duration_seconds_sum}"
+                        , "{__name__=longTaskTimer_duration_seconds_max}"
+                        , "{__name__=longTaskTimer_duration_seconds_count}"
                 );
     }
 
@@ -160,10 +172,11 @@ class LogzioMeterRegistryTest {
     @Test
     void writeMeter() {
         Timer timer = Timer.builder("myTimer").register(registry);
+        String h = registry.writeMeter(timer).toString();
         assertThat(registry.writeMeter(timer).toString())
-                .contains("{__name__=myTimer_duration_seconds_total}, {1970-01-01T00:00:00.001Z=0.0}"
-                        , "{__name__=myTimer_duration_seconds_max}, {1970-01-01T00:00:00.001Z=0.0}"
-                        , "{__name__=myTimer_duration_seconds_count}, {1970-01-01T00:00:00.001Z=0.0}"
+                .contains("{__name__=myTimer_duration_seconds_total}"
+                        , "{__name__=myTimer_duration_seconds_max}"
+                        , "{__name__=myTimer_duration_seconds_count}"
                 );
     }
 
@@ -172,6 +185,125 @@ class LogzioMeterRegistryTest {
     void writeFunctionCounter() {
         FunctionCounter counter = FunctionCounter.builder("myFunctionCounter", 123.0, Number::doubleValue).register(registry);
         assertThat(registry.writeFunctionCounter(counter).toString())
-                .contains("{__name__=myFunctionCounter_total}, {1970-01-01T00:00:00.001Z=123.0");
+                .contains("{__name__=myFunctionCounter_total}");
     }
+
+    @Test
+    void testFilterInclude() {
+        server = new WireMockServer(wireMockConfig().dynamicPort());
+        server.start();
+        LogzioConfig logzioConfig = new LogzioConfig() {
+            @Override
+            public String get(String key) {
+                return null;
+            }
+            @Override
+            public boolean enabled() {
+                return false;
+            }
+            @Override
+            public String uri() { return server.baseUrl(); }
+            @Override
+            public String token() {
+                return "fake";
+            }
+            @Override
+            public Hashtable<String, String> includeLabels() {
+                Hashtable<String, String> include = new Hashtable<>();
+                include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+                include.put("k1", "v1");
+                return include;
+            }
+            @Override
+            public Hashtable<String, String> excludeLabels() {
+                return new Hashtable<>();
+            }
+        };
+        // Initialize registry
+        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, clock);
+        LogzioMeterRegistry.setTime(Instant.ofEpochMilli(clock.wallTime()));
+        server.stubFor(any(anyUrl()));
+        Counter.builder("my.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.second.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.third.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(5));
+        server.verify(1, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_counter_abc_total.*|.*my_second_counter_abc_total.*"))
+        );
+        registry.clear();
+        registry.close();
+    }
+
+    @Test
+    void testFilterExclude() {
+        server = new WireMockServer(wireMockConfig().dynamicPort());
+        server.start();
+        LogzioConfig logzioConfig = new LogzioConfig() {
+            @Override
+            public String get(String key) {
+                return null;
+            }
+            @Override
+            public boolean enabled() {
+                return false;
+            }
+            @Override
+            public String uri() { return server.baseUrl(); }
+            @Override
+            public String token() {
+                return "fake";
+            }
+            @Override
+            public Hashtable<String, String> includeLabels() {
+                Hashtable<String, String> include = new Hashtable<>();
+                return include;
+            }
+            @Override
+            public Hashtable<String, String> excludeLabels() {
+                Hashtable<String, String> exclude = new Hashtable<>();
+                exclude.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+                return exclude;
+            }
+        };
+        // Initialize registry
+        LogzioMeterRegistry registry = new LogzioMeterRegistry(logzioConfig, clock);
+        LogzioMeterRegistry.setTime(Instant.ofEpochMilli(clock.wallTime()));
+        server.stubFor(any(anyUrl()));
+        Counter.builder("my.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.second.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        Counter.builder("my.third.counter#abc")
+                .tag("k1","v1")
+                .register(registry)
+                .increment(Math.PI);
+        registry.publish();
+
+        await().timeout(Duration.ofSeconds(5));
+        server.verify(1, postRequestedFor(
+                urlEqualTo("/"))
+                .withRequestBody(matching(".*my_third_counter_abc_total.*"))
+        );
+        registry.clear();
+        registry.close();
+    }
+
+
+
 }

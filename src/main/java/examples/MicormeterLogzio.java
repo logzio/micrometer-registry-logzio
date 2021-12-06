@@ -1,6 +1,7 @@
 package examples;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.logzio.LogzioConfig;
 import io.micrometer.logzio.LogzioMeterRegistry;
 import java.time.Duration;
@@ -20,12 +21,24 @@ class MicrometerLogzio {
             @Override
             public String uri() { return ""; }
             @Override
-            public String token() {
+            public String token() {              
                 return "";
             }
             @Override
             public Duration step() {
-                return Duration.ofSeconds(30);
+                return Duration.ofSeconds(5);
+            }
+            @Override
+            public Hashtable<String, String> includeLabels() {
+                Hashtable<String, String> include = new Hashtable<>();
+                include.put("__name__", "summary_example_max");
+                return include;
+            }
+            @Override
+            public Hashtable<String, String> excludeLabels() {
+                Hashtable<String, String> exclude = new Hashtable<>();
+                exclude.put("__name__", "summary_example_max");
+                return exclude;
             }
         };
         // Initialize registry

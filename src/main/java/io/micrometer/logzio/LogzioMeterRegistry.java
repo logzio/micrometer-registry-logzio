@@ -38,14 +38,11 @@ import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -58,14 +55,11 @@ import static io.micrometer.core.instrument.util.StringEscapeUtils.escapeJson;
  */
 public class LogzioMeterRegistry extends PushMeterRegistry {
     private static final ThreadFactory DEFAULT_THREAD_FACTORY = new NamedThreadFactory("Logzio-metrics-publisher");
-
     private static final String ERROR_RESPONSE_BODY_SIGNATURE = "\"errors\":true";
-
     private final Logger logger = LoggerFactory.getLogger(LogzioMeterRegistry.class);
-
+    private int lostItems = 0;
     private final LogzioConfig config;
     private final HttpSender httpClient;
-
     private static Instant time;
 
     @SuppressWarnings("deprecation")
@@ -83,7 +77,7 @@ public class LogzioMeterRegistry extends PushMeterRegistry {
      * @param httpClient    http client to use
      * @since 1.2.1
      */
-    protected LogzioMeterRegistry(LogzioConfig config, Clock clock, ThreadFactory threadFactory, HttpSender httpClient) {
+    protected LogzioMeterRegistry(LogzioConfig config, Clock clock, ThreadFactory threadFactory, HttpUrlConnectionSender httpClient) {
         super(config, clock);
         config().namingConvention(new LogzioNamingConvention());
         this.config = config;
@@ -112,30 +106,94 @@ public class LogzioMeterRegistry extends PushMeterRegistry {
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .collect(Collectors.toList());
-
-                Remote.WriteRequest writeRequest = buildRemoteWriteRequest(requestBody);
-                httpClient
-                        .post(uri)
-                        .withContent("application/x-protobuf", Snappy.compress(writeRequest.toByteArray()))
-                        .withHeader("Content-Encoding", "snappy")
-                        .withHeader(HttpHeaders.AUTHORIZATION, "Bearer " + config.token())
-                        .send()
-                        .onSuccess(response -> {
-                            String responseBody = response.body();
-                            if (responseBody.contains(ERROR_RESPONSE_BODY_SIGNATURE)) {
+                List<Pair<Map<String, String>, Map<Instant, Number>>> req = filter(requestBody);
+                Remote.WriteRequest writeRequest = buildRemoteWriteRequest(req);
+                AtomicBoolean keepTrying = new AtomicBoolean(true);
+                AtomicInteger attempts = new AtomicInteger(1);
+                while (keepTrying.get() && attempts.get() < 4) {
+                    httpClient
+                            .post(uri)
+                            .withContent("application/x-protobuf", Snappy.compress(writeRequest.toByteArray()))
+                            .withHeader("Content-Encoding", "snappy")
+                            .withHeader("Logzio-shipper", String.format("micrometer-registry/1.0.1/%d/%d",attempts.get(),lostItems))
+                            .withHeader(HttpHeaders.AUTHORIZATION, "Bearer " + config.token())
+                            .send()
+                            .onSuccess(response -> {
+                                String responseBody = response.body();
+                                if (responseBody.contains(ERROR_RESPONSE_BODY_SIGNATURE)) {
+                                    logger.info("failed metrics payload: {}", requestBody);
+                                    this.lostItems += requestBody.size();
+                                } else {
+                                    logger.info("successfully sent metrics");
+                                    this.lostItems = 0;
+                                }
+                                keepTrying.set(false);
+                            })
+                            .onError(response -> {
                                 logger.debug("failed metrics payload: {}", requestBody);
-                            } else {
-                                logger.debug("successfully sent metrics");
-                            }
-                        })
-                        .onError(response -> {
-                            logger.debug("failed metrics payload: {}", requestBody);
-                            logger.error("failed to send metrics to Logz.io: {}", response.body());
-                        });
+                                logger.error("failed to send metrics to Logz.io: {}", response.body());
+                                Integer[] RetryStatuses = new Integer[]{408, 500, 502, 503, 504, 522, 524};
+                                List<Integer> RetryStatusesList = new ArrayList<>(Arrays.asList(RetryStatuses));
+                                if (!RetryStatusesList.contains(response.code())){
+                                    logger.warn("Got {} status code, dropping metrics", response.code());
+                                    keepTrying.set(false);
+                                }
+                                else {
+                                    int backoff = attempts.get()*2;
+                                    logger.warn("Got {} status code, retrying to send metrics in {} seconds", response.code(),backoff);
+                                    try {
+                                        Thread.sleep(1000 * backoff);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                if (attempts.get() == 3){
+                                    logger.warn("Failed to send metrics after 3 attepmts, dropping metrics");
+                                    this.lostItems += requestBody.size();
+                                }
+                                attempts.getAndIncrement();
+                            });
+                }
             } catch (Throwable e) {
                 logger.error("failed to send metrics to Logz.io", e);
             }
         }
+    }
+    // VisibleForTesting
+    List<Pair<Map<String, String>, Map<Instant, Number>>> filter(List<Pair<Map<String, String>, Map<Instant, Number>>> wr) {
+        List<Pair<Map<String, String>, Map<Instant, Number>>> filteredWr = new ArrayList(wr) ;
+        Hashtable<String, String> include = config.includeLabels();
+        Hashtable<String, String> exclude = config.excludeLabels();
+        if(!include.isEmpty()){
+            for (Pair ts : wr) {
+                HashMap labels = (HashMap) ts.getValue0();
+                for (String labelKey : include.keySet()) {
+                    if (labels.keySet().contains(labelKey)){
+                        String regexPattern = include.get(labelKey);
+                        String value = (String) labels.get(labelKey);
+                        if (!value.matches(regexPattern))
+                            filteredWr.remove(ts);
+                    }
+                    else {
+                        filteredWr.remove(ts);
+                    }
+                }
+            }
+        }
+        else if (!exclude.isEmpty()){
+            for (Pair ts : wr) {
+                HashMap labels = (HashMap) ts.getValue0();
+                for (String labelKey : exclude.keySet()) {
+                    if (labels.keySet().contains(labelKey)){
+                        String regexPattern = exclude.get(labelKey);
+                        String value = (String) labels.get(labelKey);
+                        if (value.matches(regexPattern))
+                            filteredWr.remove(ts);
+                    }
+                }
+            }
+        }
+        return filteredWr ;
     }
 
     // VisibleForTesting
@@ -257,7 +315,9 @@ public class LogzioMeterRegistry extends PushMeterRegistry {
     public static void setTime(Instant newTime) {
         time = newTime;
     }
-
+    public void setLostItems(int lost) {
+        this.lostItems = lost;
+    }
 
     @Override
     public Counter newCounter(Meter.Id id) {
