@@ -121,10 +121,10 @@ Take for example this following usage, In your `LogzioConfig()` constructor:
 ```java
 @Override
 public Hashtable<String, String> includeLabels() {
-    Hashtable<String, String> include = new Hashtable<>();
-    include.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
-    include.put("k1", "v1");
-    return include;
+    Hashtable<String, String> includeLabels = new Hashtable<>();
+    includeLabels.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+    includeLabels.put("k1", "v1");
+    return includeLabels;
 }
 ```
 The registry will keep only metrics with the label `__name__` matching the regex `my_counter_abc_total|my_second_counter_abc_total`, and with the label `k1` matching the regex `v1`.
@@ -133,10 +133,10 @@ In your `LogzioConfig()` constructor:
 ```java
 @Override
 public Hashtable<String, String> excludeLabels() {
-    Hashtable<String, String> exclude = new Hashtable<>();
-    exclude.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
-    exclude.put("k1", "v1");
-    return exclude;
+    Hashtable<String, String> excludeLabels = new Hashtable<>();
+    excludeLabels.put("__name__", "my_counter_abc_total|my_second_counter_abc_total");
+    excludeLabels.put("k1", "v1");
+    return excludeLabels;
 }
 ```
 The registry will drop all metrics with the label `__name__` matching the regex `my_counter_abc_total|my_second_counter_abc_total`, and with the label `k1` matching the regex `v1`.

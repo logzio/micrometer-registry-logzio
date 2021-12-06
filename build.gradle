@@ -28,7 +28,7 @@ compileJava   {
 }
 
 dependencies {
-    implementation "io.github.resilience4j:resilience4j-retry:1.7.0"
+    implementation "io.github.resilience4j:resilience4j-retry:1.7.1"
     implementation 'io.micrometer:micrometer-registry-prometheus:1.8.0'
     implementation "io.micrometer:micrometer-core:1.6.3"
     implementation 'junit:junit:4.13.1'
