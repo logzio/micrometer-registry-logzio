@@ -43,5 +43,5 @@ dependencies {
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.26'
     testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
-    testImplementation "com.github.tomakehurst:wiremock-jre8:2.27.2"
+    testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1"
 }
